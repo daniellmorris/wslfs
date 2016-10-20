@@ -35,10 +35,13 @@ To run and build *wslfs* the following dependencies are required.
 * ntfs-3g
 
 For a debian based distribution you can install libfuse-dev using apt-get 
-but ntfs-3g may have to be installed from source.
-...
+```
 apt-get install libfuse-dev cmake
-...
+```
+
+ntfs-3g may have to be installed from source.
+Follow instructions at http://www.tuxera.com/community/open-source-ntfs-3g/
+
 I am using version ntfs-3g version ntfs-3g 2016.2.22 (We will consider that the minimum version)
 
 ## Build from source
