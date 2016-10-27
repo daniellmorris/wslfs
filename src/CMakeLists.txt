@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 
-project(Pass-ThroughFS)
+project(WSL-FS)
 
-set(CMAKE_C_FLAGS "-Wall -Wextra -std=c99")
+set(CMAKE_C_FLAGS "-Wall -Wextra -std=c11 -D_DEFAULT_SOURCE")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/../cmake/")
 

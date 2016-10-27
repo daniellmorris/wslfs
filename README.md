@@ -18,7 +18,7 @@ system to avoid messing up your windows wsl permissions.
 Use ntfs-3g to mount the windows partition (Make sure it is the latest version)
 
 ```
-./wslfs <WindowsPartitionMountPointFromNtfs3g/Users/**windows_user**/AppData/Local/lxss/home/**wsl_user**> <mountpoint> [OPTIONS]
+./wslfs -s <WindowsPartitionMountPointFromNtfs3g/Users/**windows_user**/AppData/Local/lxss/home/**wsl_user**> <mountpoint> [OPTIONS]
 ```
 
 To umount use the fusermount command.

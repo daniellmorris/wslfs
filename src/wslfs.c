@@ -18,10 +18,10 @@
 //#define HAVE_SETXATTR
 #define HAVE_UTIMENSAT
 
+#include <stdlib.h>
 #include <libgen.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -32,9 +32,10 @@
 #include <sys/file.h>
 #include <sys/types.h>
 
-#ifdef HAVE_SETXATTR
-    #include <sys/xattr.h>
-#endif
+#include <sys/xattr.h>
+//#ifdef HAVE_SETXATTR
+//    #include <sys/xattr.h>
+//#endif
 #ifdef HAVE_UTIMENSAT
     #include <fcntl.h> /* Definition of AT_* constants */
 #endif
@@ -42,21 +43,21 @@
 
 #define MAX_PATHLEN 500
 
-// Note: Most of this is already defined in the Windows SDK... 
-// TODO: Use header files for these (Not sure what I'm missing yet)
-//#define	S_IFMT	 0170000		/* type of file */
-//#define	S_IFIFO	 0010000		/* named pipe (fifo) */
-//#define	S_IFCHR	 0020000		/* character special */
-//#define	S_IFDIR	 0040000		/* directory */
-//#define	S_IFBLK	 0060000		/* block special */
-#define	S_IFREG	 0100000		/* regular */
-#define	S_IFLNK	 0120000		/* symbolic link */
-//#define	S_IFSOCK 0140000		/* socket */
-//#define	S_ISVTX	 0001000		/* save swapped text even after use */
-//#define S_BLKSIZE	512		/* block size used in the stat struct */
-
-// TODO: Fix this - Not sure why this isn't in the header allready
-#define AT_SYMLINK_NOFOLLOW     0x100   /* Do not follow symbolic links.  */
+//// Note: Most of this is already defined in the Windows SDK... 
+//// TODO: Use header files for these (Not sure what I'm missing yet)
+////#define	S_IFMT	 0170000		/* type of file */
+////#define	S_IFIFO	 0010000		/* named pipe (fifo) */
+////#define	S_IFCHR	 0020000		/* character special */
+////#define	S_IFDIR	 0040000		/* directory */
+////#define	S_IFBLK	 0060000		/* block special */
+//#define	S_IFREG	 0100000		/* regular */
+//#define	S_IFLNK	 0120000		/* symbolic link */
+////#define	S_IFSOCK 0140000		/* socket */
+////#define	S_ISVTX	 0001000		/* save swapped text even after use */
+////#define S_BLKSIZE	512		/* block size used in the stat struct */
+//
+//// TODO: Fix this - Not sure why this isn't in the header allready
+//#define AT_SYMLINK_NOFOLLOW     0x100   /* Do not follow symbolic links.  */
 
 
 #define WSL_DEFAULT_FLAGS 0x0
@@ -69,7 +70,6 @@ typedef struct __wsl_extended_attr_v1__
     uint32_t pad4;   
     uint16_t Flags;
     uint16_t Version;
-
     uint32_t st_mode;       // Mode bit mask constants: https://msdn.microsoft.com/en-us/library/3kyc8381.aspx
     uint32_t st_uid;        // Numeric identifier of user who owns file (Linux-specific).
     uint32_t st_gid;        // Numeric identifier of group that owns the file (Linux-specific)
@@ -77,9 +77,9 @@ typedef struct __wsl_extended_attr_v1__
     uint32_t st_atime_nsec; // Time of last access of file (nano-seconds).
     uint32_t st_mtime_nsec; // Time of last modification of file (nano-seconds).
     uint32_t st_ctime_nsec; // Time of creation of file (nano-seconds).
-    uint64_t st_atime;    // Time of last access of file.
-    uint64_t st_mtime;    // Time of last modification of file.
-    uint64_t st_ctime;    // Time of creation of file.
+    uint64_t st_at;    // Time of last access of file.
+    uint64_t st_mt;    // Time of last modification of file.
+    uint64_t st_ct;    // Time of creation of file.
 } wsl_extended_attr_v1_t;
 
 struct wsl_dirp
@@ -119,19 +119,19 @@ static inline void sanitize_path_with_dir(const char* path, const char * dir, ch
 }
 
 
-static debug_output_wsl_extend_attr(char * path, wsl_extended_attr_v1_t * ext) {
-    fprintf(stdout, "debug_output_wsl_extend_attr: (%s) %04x\n", path, ext->st_mode );
-    fprintf(stdout,"pad1:                     %08x\n", ext->pad1);
-    fprintf(stdout,"pad2:                     %08x\n", ext->pad2);
-    fprintf(stdout,"pad3:                     %08x\n", ext->pad3);
-    fprintf(stdout,"pad4:                     %08x\n", ext->pad4);
-    fprintf(stdout,"Flags:                     %04x\n", ext->Flags);
-    fprintf(stdout,"Version:                   %04x\n", ext->Version);
-    fprintf(stdout,"Mode:                      %04o (octal)\n", ext->st_mode  );
-    fprintf(stdout,"RDev:                      %04x\n", ext->st_rdev  );
-    fprintf(stdout,"uid:                      %d\n", ext->st_uid  );
-    fprintf(stdout,"gid:                      %d\n", ext->st_gid  );
-}
+//static void debug_output_wsl_extend_attr(char * path, wsl_extended_attr_v1_t * ext) {
+//    fprintf(stdout, "debug_output_wsl_extend_attr: (%s) %04x\n", path, ext->st_mode );
+//    fprintf(stdout,"pad1:                     %08x\n", ext->pad1);
+//    fprintf(stdout,"pad2:                     %08x\n", ext->pad2);
+//    fprintf(stdout,"pad3:                     %08x\n", ext->pad3);
+//    fprintf(stdout,"pad4:                     %08x\n", ext->pad4);
+//    fprintf(stdout,"Flags:                     %04x\n", ext->Flags);
+//    fprintf(stdout,"Version:                   %04x\n", ext->Version);
+//    fprintf(stdout,"Mode:                      %04o (octal)\n", ext->st_mode  );
+//    fprintf(stdout,"RDev:                      %04x\n", ext->st_rdev  );
+//    fprintf(stdout,"uid:                      %d\n", ext->st_uid  );
+//    fprintf(stdout,"gid:                      %d\n", ext->st_gid  );
+//}
 
 static int get_extended_attr(const char *path, wsl_extended_attr_v1_t * ext) {
     char * name = "system.ntfs_ea";
@@ -167,9 +167,9 @@ static int wsl_getattr(const char *path, struct stat *stbuf)
    
 
     stbuf->st_mode = ext.st_mode;//(stbuf->st_mode & ~(S_IRWXU | S_IRWXG | S_IRWXO)) & (ext.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO));
-    stbuf->st_atime = ext.st_atime;
-    stbuf->st_mtime = ext.st_mtime;
-    stbuf->st_ctime = ext.st_ctime;
+    stbuf->st_atime = ext.st_at;
+    stbuf->st_mtime = ext.st_mt;
+    stbuf->st_ctime = ext.st_ct;
     stbuf->st_uid = ext.st_uid;
     stbuf->st_gid = ext.st_gid;
     //debug_output_wsl_extend_attr(p, &ext);
@@ -191,7 +191,7 @@ static int wsl_access(const char *path, int mask)
 
 static int wsl_readlink(const char *path, char *buf, size_t size)
 {
-    int res;
+    //int res;
     char p[MAX_PATHLEN];
     sanitize_path(path, p);
 
@@ -243,7 +243,6 @@ static int wsl_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 {
     struct wsl_dirp *d = (struct wsl_dirp*) fi->fh;
     char p[MAX_PATHLEN];
-    char cur_dir[MAX_PATHLEN];
     wsl_extended_attr_v1_t ext;
     int res;
     (void) path;
@@ -289,7 +288,11 @@ static int wsl_mknod(const char *path, mode_t mode, dev_t rdev)
 {
     int res;
     char p[MAX_PATHLEN];
+    char dupP[MAX_PATHLEN];
+    struct stat stbuf;
+    wsl_extended_attr_v1_t base_ext;
     sanitize_path(path, p);
+    sanitize_path(path, dupP);
 
     /* On Linux this could just be 'mknod(path, mode, rdev)' but this
        is more portable */
@@ -297,37 +300,23 @@ static int wsl_mknod(const char *path, mode_t mode, dev_t rdev)
         res = open(p, O_CREAT | O_EXCL | O_WRONLY, mode);
         if (res >= 0)
             res = close(res);
-    } else if (S_ISFIFO(mode))
-        res = mkfifo(p, mode);
-    else
-        res = mknod(p, mode, rdev);
+    } else if (S_ISFIFO(mode)) {
+        //res = mkfifo(p, mode);
+        return -ENOTSUP;
+    } else {
+        //res = mknod(p, mode, rdev);
+        return -ENOTSUP;
+    }
     if (res == -1)
         return -errno;
-
-    return 0;
-}
-
-static int wsl_mkdir(const char *path, mode_t mode)
-{
-    int res;
-    char p[MAX_PATHLEN];
-    struct stat stbuf;
-    wsl_extended_attr_v1_t base_ext;
-    sanitize_path(path, p);
-
-    res = mkdir(p, mode);
-    if (res == -1)
-        return -errno;
-   
+    
     res = lstat(p, &stbuf);
     if (res == -1)
         return -errno;
 
-    char * dupP = strdup(p);
     char * baseP = dirname(dupP);
     res = get_extended_attr(baseP, &base_ext);
     
-    free(dupP);
     if (res == -1)
         return -errno;
     
@@ -345,9 +334,59 @@ static int wsl_mkdir(const char *path, mode_t mode)
         .st_atime_nsec = 0,
         .st_mtime_nsec = 0,
         .st_ctime_nsec = 0,
-        .st_atime = stbuf.st_atime,
-        .st_mtime = stbuf.st_mtime,
-        .st_ctime = stbuf.st_ctime
+        .st_at = stbuf.st_atime,
+        .st_mt = stbuf.st_mtime,
+        .st_ct = stbuf.st_ctime
+    };
+    
+    res = set_extended_attr(p, &ext);
+    if (res == -1)
+        return -errno;
+
+    return 0;
+}
+
+static int wsl_mkdir(const char *path, mode_t mode)
+{
+    int res;
+    char p[MAX_PATHLEN];
+    char dupP[MAX_PATHLEN];
+    struct stat stbuf;
+    wsl_extended_attr_v1_t base_ext;
+    sanitize_path(path, p);
+    sanitize_path(path, dupP);
+
+    res = mkdir(p, mode);
+    if (res == -1)
+        return -errno;
+   
+    res = lstat(p, &stbuf);
+    if (res == -1)
+        return -errno;
+
+    char * baseP = dirname(dupP);
+    res = get_extended_attr(baseP, &base_ext);
+    
+    if (res == -1)
+        return -errno;
+    
+    wsl_extended_attr_v1_t ext = {
+        .pad1 = 0x00000048,
+        .pad2 = 0x00380700,
+        .pad3 = 0x5441584c,  
+        .pad4 = 0x00425254,  
+        .Flags = WSL_DEFAULT_FLAGS,
+        .Version = WSL_VERSION,
+        .st_mode = base_ext.st_mode,
+        .st_uid = base_ext.st_uid,
+        .st_gid = base_ext.st_gid,
+        .st_rdev = 0,
+        .st_atime_nsec = 0,
+        .st_mtime_nsec = 0,
+        .st_ctime_nsec = 0,
+        .st_at = stbuf.st_atime,
+        .st_mt = stbuf.st_mtime,
+        .st_ct = stbuf.st_ctime
     };
     
     res = set_extended_attr(p, &ext);
@@ -390,10 +429,12 @@ static int wsl_symlink(const char *from, const char *to)
     int fd;
     //char f[MAX_PATHLEN];
     char t[MAX_PATHLEN];
+    char dupP[MAX_PATHLEN];
     struct stat stbuf;
     wsl_extended_attr_v1_t base_ext;
     //sanitize_path(from, f);
     sanitize_path(to, t);
+    sanitize_path(to, dupP);
     fd = creat(t, S_IRWXO | S_IRWXG | S_IRWXU | S_IFREG);
     if (fd == -1)
         return -errno;
@@ -410,11 +451,9 @@ static int wsl_symlink(const char *from, const char *to)
     if (res == -1)
         return -errno;
 
-    char * dupP = strdup(t);
     char * baseP = dirname(dupP);
     res = get_extended_attr(baseP, &base_ext);
     //debug_output_wsl_extend_attr(baseP, &base_ext);
-    free(dupP);
     if (res == -1)
         return -errno;
     
@@ -432,9 +471,9 @@ static int wsl_symlink(const char *from, const char *to)
         .st_atime_nsec = 0,
         .st_mtime_nsec = 0,
         .st_ctime_nsec = 0,
-        .st_atime = stbuf.st_atime,
-        .st_mtime = stbuf.st_mtime,
-        .st_ctime = stbuf.st_ctime
+        .st_at = stbuf.st_atime,
+        .st_mt = stbuf.st_mtime,
+        .st_ct = stbuf.st_ctime
     };
     //debug_output_wsl_extend_attr(t, &ext);
     res = set_extended_attr(t, &ext);
@@ -535,16 +574,16 @@ static int wsl_truncate(const char *path, off_t size)
     return 0;
 }
 
-static int wsl_ftruncate(const char* path, off_t size, struct fuse_file_info *fi)
-{
-    int res;
-    (void) path;
-    res = ftruncate(fi->fh, size);
-    if (res == -1)
-        return -errno;
-
-    return 0;
-}
+//static int wsl_ftruncate(const char* path, off_t size, struct fuse_file_info *fi)
+//{
+//    int res;
+//    (void) path;
+//    res = ftruncate(fi->fh, size);
+//    if (res == -1)
+//        return -errno;
+//
+//    return 0;
+//}
 
 #ifdef HAVE_UTIMENSAT
 static int wsl_utimens(const char *path, const struct timespec ts[2])
@@ -568,9 +607,9 @@ static int wsl_utimens(const char *path, const struct timespec ts[2])
     if (res == -1)
         return -errno;
 
-    ext.st_atime = stbuf.st_atime;
-    ext.st_mtime = stbuf.st_mtime;
-    ext.st_ctime = stbuf.st_ctime;
+    ext.st_at = stbuf.st_atime;
+    ext.st_mt = stbuf.st_mtime;
+    ext.st_ct = stbuf.st_ctime;
     res = set_extended_attr(p, &ext);
     if (res == -1)
         return -errno;
@@ -584,8 +623,10 @@ static int wsl_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 
     int res;
     char p[MAX_PATHLEN];
+    char dupP[MAX_PATHLEN];
     struct stat stbuf;
     sanitize_path(path, p);
+    sanitize_path(path, dupP);
     wsl_extended_attr_v1_t base_ext;
 
     res = open(p, fi->flags, mode);
@@ -598,10 +639,9 @@ static int wsl_create(const char *path, mode_t mode, struct fuse_file_info *fi)
     if (res == -1)
         return -errno;
 
-    char * dupP = strdup(p);
     char * baseP = dirname(dupP);
     res = get_extended_attr(baseP, &base_ext);
-    free(dupP);
+    
     if (res == -1)
         return -errno;
     
@@ -619,9 +659,9 @@ static int wsl_create(const char *path, mode_t mode, struct fuse_file_info *fi)
         .st_atime_nsec = 0,
         .st_mtime_nsec = 0,
         .st_ctime_nsec = 0,
-        .st_atime = stbuf.st_atime,
-        .st_mtime = stbuf.st_mtime,
-        .st_ctime = stbuf.st_ctime
+        .st_at = stbuf.st_atime,
+        .st_mt = stbuf.st_mtime,
+        .st_ct = stbuf.st_ctime
     };
     res = set_extended_attr(p, &ext);
     if (res == -1)
@@ -794,14 +834,15 @@ static struct fuse_operations wsl_oper = {
     .access		= wsl_access,
     .readlink	= wsl_readlink,
     .opendir    = wsl_opendir,
+    .releasedir = wsl_releasedir,
     .readdir	= wsl_readdir,
-    //.mknod		= wsl_mknod, // Not yet implimented
+    .mknod		= wsl_mknod, // Not yet implimented
     .mkdir		= wsl_mkdir,
     .symlink	= wsl_symlink,
     .unlink		= wsl_unlink,
     .rmdir		= wsl_rmdir,
     .rename		= wsl_rename,
-    //.link		= wsl_link, // Not yet implimented
+    .link		= wsl_link, // Not yet implimented
     .chmod		= wsl_chmod,
     .chown		= wsl_chown,
     .truncate	= wsl_truncate,
@@ -843,6 +884,8 @@ struct wsl_opt_struct {
  */
 int wsl_opt_proc(void *data, const char* arg, int key, struct fuse_args *outargs)
 {
+    (void)(data);
+    (void)(outargs);
     switch(key)
     {
         case FUSE_OPT_KEY_NONOPT:
