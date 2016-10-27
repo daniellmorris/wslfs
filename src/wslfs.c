@@ -257,18 +257,21 @@ static int wsl_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
         res = get_extended_attr(p, &ext);
 
         struct stat st;
-        off_t nextoff;
+        //off_t nextoff;
         memset(&st, 0, sizeof(st));
         st.st_ino = d->entry->d_ino;
         st.st_mode = d->entry->d_type << 12;
-        nextoff = telldir(d->dp);
+        //nextoff = telldir(d->dp);
         if (res != -1 && ext.st_mode!=0) {
-            if (filler(buf, d->entry->d_name, &st, nextoff)) {
+            if (filler(buf, d->entry->d_name, &st, 0)) {
+                fprintf(stdout, "****************************Break on file %s\n", d->entry->d_name);
                 break;
             }
+        } else {
+            fprintf(stdout, "***************************Not showing file %s\n", d->entry->d_name);
         }
         d->entry = NULL;
-        d->offset = nextoff;
+        //d->offset = nextoff;
     }
 
     return 0;
